@@ -13,8 +13,8 @@ android {
         applicationId = "com.powerbase.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
     }
 
     // Release signing is read from environment variables so no key material
@@ -22,7 +22,7 @@ android {
     signingConfigs {
         create("release") {
             val path = System.getenv("KEYSTORE_PATH") ?: "release.jks"
-            storeFile = file(path)
+            storeFile = rootProject.file(path)
             storePassword = System.getenv("KEYSTORE_PASSWORD")
             keyAlias = System.getenv("KEY_ALIAS")
             keyPassword = System.getenv("KEY_PASSWORD")

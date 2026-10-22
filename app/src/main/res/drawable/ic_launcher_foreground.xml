@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Three ascending bars: usage over time, which is the whole app in one
+         glyph. Kept inside the 72x72 safe zone so no launcher mask clips it. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M31,64 h11 v22 h-11 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48.5,50 h11 v36 h-11 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M66,36 h11 v50 h-11 z" />
+
+    <!-- A rising trace across the top, for the "logs and diagnostics" half. -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M26,40 L40,28 L54,36 L70,20 L84,26" />
+
+</vector>

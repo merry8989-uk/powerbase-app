@@ -3,6 +3,8 @@ name: Release
 # Build a signed release and publish it. Rule 3: publish only what actually
 # builds, always as an installable update over the previous version.
 on:
+  release:
+    types: [published]
   push:
     tags:
       - 'v*'

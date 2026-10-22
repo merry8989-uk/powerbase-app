@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Powerbase for Android — self-hosted diagnostics &amp; usage logs in your pocket</title>
+<meta name="description" content="Powerbase for Android: a self-hosted diagnostics and usage-log client. Dashboards, log explorer, crash groups, devices and alerts for your own Powerbase server. Kotlin + Jetpack Compose.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f7fa; --surface:#ffffff; --surface2:#eef1f6; --border:rgba(16,32,58,.10);
+  --text:#101a2c; --dim:#5c6b83; --accent:#0f766e; --accent-soft:rgba(15,118,110,.10);
+  --good:#15803d; --warn:#b45309; --bad:#b91c1c; --radius:14px;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --sans:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0a1120; --surface:#111b2e; --surface2:#16223a; --border:rgba(255,255,255,.09);
+    --text:#dfe8f4; --dim:#8ba0ba; --accent:#2dd4bf; --accent-soft:rgba(45,212,191,.12);
+    --good:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+code,pre{font-family:var(--mono);font-size:.86em}
+code{background:var(--surface2);padding:.12em .4em;border-radius:5px}
+pre{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;overflow-x:auto}
+
+header.hero{padding:64px 0 40px;border-bottom:1px solid var(--border)}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;
+  background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:5px 12px;letter-spacing:.02em}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.12;margin:18px 0 12px;letter-spacing:-.02em}
+.lede{font-size:clamp(16px,2.2vw,19px);color:var(--dim);max-width:44em;margin:0 0 26px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{display:inline-block;background:var(--accent);color:#fff;font-weight:600;padding:12px 22px;border-radius:10px;font-size:15px}
+@media (prefers-color-scheme:dark){.btn{color:#04201d}}
+.btn:hover{text-decoration:none;opacity:.92}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+
+section{padding:52px 0;border-bottom:1px solid var(--border)}
+h2{font-size:clamp(22px,3.2vw,29px);margin:0 0 8px;letter-spacing:-.015em}
+h3{font-size:18px;margin:30px 0 8px}
+.sub{color:var(--dim);margin:0 0 26px;max-width:46em}
+.grid{display:grid;gap:16px}
+@media(min-width:720px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card h3{margin-top:0}
+.card p{margin:0;color:var(--dim);font-size:14.5px}
+.shot{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.shot img{width:100%;display:block;border-radius:9px}
+.shot figcaption{font-size:13px;color:var(--dim);margin-top:9px}
+figure{margin:0}
+table{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--surface2);font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--dim)}
+tr:last-child td{border-bottom:none}
+td.yes{color:var(--good);font-weight:600}
+td.no{color:var(--bad)}
+ul{padding-left:20px}
+li{margin:5px 0}
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:14px 18px;border-radius:0 10px 10px 0;margin:22px 0}
+.note strong{color:var(--accent)}
+footer{padding:46px 0 60px;text-align:center}
+.ig{display:inline-flex;align-items:center;gap:10px;font-size:20px;font-weight:600;
+  border:1px solid var(--border);border-radius:12px;padding:14px 24px;background:var(--surface)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14.5px}
+.kv dt{color:var(--dim)}
+.kv dd{margin:0;font-family:var(--mono);font-size:13.5px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">v1.0.0 · Android 8.0+ · MIT</span>
+    <h1>Your app's diagnostics and usage logs.<br>On your server. In your pocket.</h1>
+    <p class="lede">
+      Powerbase is a self-hosted telemetry stack. The server ingests batched events, logs and
+      crashes into a single SQLite file; this app puts that data in front of you — dashboards,
+      a log explorer, crash groups, devices and alerts — without a single byte leaving your
+      infrastructure.
+    </p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/merry8989-uk/powerbase-app/releases/latest">Download the signed APK</a>
+      <a class="btn ghost" href="https://github.com/merry8989-uk/powerbase-app">View the source</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>What it is</h2>
+    <p class="sub">
+      Two pieces: a server you run, and this app. The server is one Python process over one
+      SQLite file. The app is the client you actually look at.
+    </p>
+    <div class="grid g3">
+      <div class="card">
+        <h3>You own the data</h3>
+        <p>Everything lands in a file you control. No third-party account, no per-event
+        pricing, no data processing agreement to sign.</p>
+      </div>
+      <div class="card">
+        <h3>Redacted before it is stored</h3>
+        <p>The SDK strips emails, phone numbers, Aadhaar, PAN, card numbers and tokens
+        <em>on the device</em>. The server redacts again on arrival.</p>
+      </div>
+      <div class="card">
+        <h3>Works before you have a server</h3>
+        <p>Demo mode ships on, so every screen is explorable the moment you install it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Screenshots</h2>
+    <p class="sub">
+      Every screen, rendered from the app's own Compose layout. Demo mode is on, so this is
+      exactly what you see on first launch.
+    </p>
+    <div class="grid g3">
+      <figure class="shot"><img src="screenshots/overview.png" alt="Overview screen"><figcaption><strong>Overview</strong> — KPIs, events per day, top screens, recent crashes</figcaption></figure>
+      <figure class="shot"><img src="screenshots/charts.png" alt="Charts screen"><figcaption><strong>Charts</strong> — metric picker and breakdowns</figcaption></figure>
+      <figure class="shot"><img src="screenshots/logs.png" alt="Log explorer"><figcaption><strong>Log explorer</strong> — level filter, full-text search, stacktrace on tap</figcaption></figure>
+      <figure class="shot"><img src="screenshots/crashes.png" alt="Crash groups"><figcaption><strong>Crash groups</strong> — grouped by fingerprint, ranked by frequency</figcaption></figure>
+      <figure class="shot"><img src="screenshots/alerts.png" alt="Alerts screen"><figcaption><strong>Alerts</strong> — crash-free rate, error rate, silent SDK, job failures</figcaption></figure>
+      <figure class="shot"><img src="screenshots/settings.png" alt="Settings screen"><figcaption><strong>Settings</strong> — theme, server, screens, updates, diagnostics</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Every feature, in detail</h2>
+    <p class="sub">Not a teaser — this is the reference for what each screen does.</p>
+
+    <table>
+      <thead><tr><th>Screen</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Overview</strong></td>
+          <td>Six KPI cards — active devices, sessions, events, crashes, crash-free rate and
+          error-log count — each colour-coded against its threshold. Below them: an events-per-day
+          line chart for the selected range, a ranked list of top screens, a ranked list of top
+          events, and the three most recent crash groups. A banner appears at the top whenever
+          an alert is firing.</td>
+        </tr>
+        <tr>
+          <td><strong>Charts</strong></td>
+          <td>The same data at a larger size. Pick the metric (events, sessions, crashes,
+          error logs) and the chart redraws; a total for the range is shown above it. Below,
+          the same range broken down by event name and by screen.</td>
+        </tr>
+        <tr>
+          <td><strong>Log explorer</strong></td>
+          <td>Every log line the server holds. Filter by level — any, DEBUG, INFO, WARN, ERROR,
+          FATAL — or search the message text, which runs against the server's SQLite FTS5
+          index rather than a <code>LIKE</code> scan. Tap any row to expand its stacktrace and
+          context. Each row shows the level, tag, timestamp and originating device.</td>
+        </tr>
+        <tr>
+          <td><strong>Crash groups</strong></td>
+          <td>Crashes folded into groups by fingerprint, ranked by how many times each one
+          happened. Each card shows the crash kind (java / native / anr), the occurrence count,
+          how many distinct devices were affected, the first and last time it was seen, and the
+          fingerprint itself. The fingerprint is computed on-device with the same algorithm the
+          server uses, so line numbers and memory addresses do not split a group.</td>
+        </tr>
+        <tr>
+          <td><strong>Devices</strong></td>
+          <td>Every install that has reported: manufacturer, model, Android version, app
+          version, session count and last-seen time, newest first.</td>
+        </tr>
+        <tr>
+          <td><strong>Alerts</strong></td>
+          <td>Whatever the server's rules are firing, with the severity, the rule name, the
+          threshold it crossed and the measured value. Rules cover the crash-free rate, the
+          error-log rate, an SDK that has gone silent, a failed maintenance job, and rollups
+          that have fallen behind.</td>
+        </tr>
+        <tr>
+          <td><strong>Settings</strong></td>
+          <td>See the section below — every control is wired and persists immediately.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Settings, control by control</h3>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Appearance</h3>
+        <ul>
+          <li><strong>Theme</strong> — system, light or dark.</li>
+          <li><strong>Accent colour</strong> — teal, indigo, amber or rose.</li>
+          <li><strong>Text size</strong> — 0.85× to 1.5×.</li>
+          <li><strong>Density</strong> — 0.80× to 1.20×.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Server</h3>
+        <ul>
+          <li><strong>Demo mode</strong> — built-in sample data, on by default.</li>
+          <li><strong>Server URL</strong> and <strong>read API key</strong>.</li>
+          <li><strong>Test connection</strong> — round-trips the health endpoint.</li>
+          <li><strong>Auto-refresh</strong> — off, 15s, 30s, 60s or 5min.</li>
+          <li><strong>Default range</strong> — 1, 7, 14, 30 or 90 days.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Screens</h3>
+        <p>A switch per screen. Turn one off and its tab disappears — the switches really gate
+        the UI rather than sitting there decoratively.</p>
+      </div>
+      <div class="card">
+        <h3>General</h3>
+        <ul>
+          <li><strong>Language</strong> — system, English, Hindi.</li>
+          <li><strong>Notifications</strong>.</li>
+          <li><strong>Reset to defaults</strong>.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Updates</h3>
+        <p><strong>Check for updates</strong> asks the app's GitHub Releases for the latest
+        version and compares it to the one installed. If there is a newer one, <strong>Update</strong>
+        downloads the signed APK and hands it to the system installer — straight over the
+        installed app, with no browser and no uninstall.</p>
+      </div>
+      <div class="card">
+        <h3>Diagnostics</h3>
+        <p>Log collection is <strong>on by default</strong>. From here you can see how much has
+        been collected, <strong>share</strong> it through the system share sheet,
+        <strong>export</strong> it as <code>.txt</code>, <code>.json</code>, <code>.md</code> or
+        <code>.zip</code>, and <strong>clear</strong> it. Turning collection off stops new
+        writes but still lets you export and clear what already exists.</p>
+      </div>
+    </div>
+
+    <h3>Under the hood</h3>
+    <ul>
+      <li><strong>Full-screen by default</strong> — the status and navigation bars are hidden;
+      swipe to reveal them transiently.</li>
+      <li><strong>No third-party libraries for the plumbing</strong> — <code>HttpURLConnection</code>
+      for the network, <code>org.json</code> for parsing, and the charts drawn straight onto a
+      Compose <code>Canvas</code>.</li>
+      <li><strong>Read-only</strong> — the app holds a read-scoped key. It can never write to
+      your database, and an ingest key cannot read from it.</li>
+      <li><strong>Uncaught crashes are captured</strong> into the diagnostics log before the
+      process dies.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Getting started</h2>
+    <p class="sub">Ten minutes, from nothing to your own telemetry.</p>
+
+    <h3>1. Install the app</h3>
+    <p>Download the signed APK from <a href="https://github.com/merry8989-uk/powerbase-app/releases/latest">Releases</a>
+    and open it. You will need to allow installing from this source once. The app then keeps
+    itself up to date from inside the app.</p>
+
+    <h3>2. Look around in demo mode</h3>
+    <p>Demo mode is already on. Every screen is populated with sample data, so you can see
+    what you are signing up for before running anything.</p>
+
+    <h3>3. Run the server</h3>
+    <pre>pip install -r requirements.txt
+python scripts/bootstrap.py --app-id com.example.shop --name "Example Shop"
+python run.py</pre>
+    <p>Bootstrap prints two keys. <strong>Use the read key.</strong> An ingest key is
+    write-only by design and cannot read your data back — that separation is what keeps a key
+    embedded in a shipped app from being able to read anyone's telemetry.</p>
+
+    <h3>4. Point the app at it</h3>
+    <p>Settings → Server → turn demo mode off → paste the server URL and the read key → tap
+    <strong>Test connection</strong>. You should see <code>Connected — server reports 'ok'</code>.</p>
+
+    <h3>5. Send it some data</h3>
+    <p>Add the Powerbase Android SDK to the app you want to instrument. It batches events,
+    logs and crashes, buffers them durably on device, and uploads them with exponential
+    backoff — including the crash that killed the app, captured on the way down.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How this compares to the alternatives</h2>
+    <p class="sub">
+      There is no single winner — it depends on what you are optimising for. Here is the honest
+      comparison, including where Powerbase loses.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>&nbsp;</th><th>Powerbase</th><th>Crashlytics / Firebase</th><th>Sentry (self-hosted)</th><th>A plain SQL database</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Where your data lives</strong></td>
+          <td class="yes">Your own file, on your own box</td>
+          <td class="no">Google's infrastructure</td>
+          <td>Your box, but a fleet of services</td>
+          <td class="yes">Your own database</td>
+        </tr>
+        <tr>
+          <td><strong>What you have to run</strong></td>
+          <td class="yes">One Python process, one SQLite file</td>
+          <td class="yes">Nothing — it is a service</td>
+          <td class="no">Postgres, Redis, Kafka, workers</td>
+          <td>Database + your own ingest + your own UI</td>
+        </tr>
+        <tr>
+          <td><strong>Cost</strong></td>
+          <td class="yes">Free, no per-event pricing</td>
+          <td>Free tier with sampling limits</td>
+          <td>Free tier is limited; self-hosting is a project</td>
+          <td>Database costs only</td>
+        </tr>
+        <tr>
+          <td><strong>PII handling</strong></td>
+          <td class="yes">Redacted on-device <em>and</em> server-side before storage</td>
+          <td>Your responsibility, after upload</td>
+          <td>Your responsibility, after upload</td>
+          <td>Whatever you write is what is stored</td>
+        </tr>
+        <tr>
+          <td><strong>App-shaped data out of the box</strong></td>
+          <td class="yes">Sessions, devices, crash groups, screens — modelled from day one</td>
+          <td class="yes">Crash-first, with events and funnels</td>
+          <td>Errors-first; sessions and devices need work</td>
+          <td class="no">Tables you design yourself</td>
+        </tr>
+        <tr>
+          <td><strong>History after retention</strong></td>
+          <td class="yes">Daily rollups keep long-range charts alive after raw rows are pruned</td>
+          <td>Varies by plan</td>
+          <td>Retention tied to plan</td>
+          <td class="no">Delete rows, lose the history</td>
+        </tr>
+        <tr>
+          <td><strong>Native crash symbolication</strong></td>
+          <td class="no">Basic — fingerprints, not symbolicated native traces</td>
+          <td class="yes">Deep, including native and ANR analysis</td>
+          <td class="yes">Deep, with symbol servers</td>
+          <td class="no">None</td>
+        </tr>
+        <tr>
+          <td><strong>Performance tracing, replays, releases</strong></td>
+          <td class="no">Not the goal</td>
+          <td>Some</td>
+          <td class="yes">Extensive</td>
+          <td class="no">None</td>
+        </tr>
+        <tr>
+          <td><strong>Time to first dashboard</strong></td>
+          <td class="yes">Minutes</td>
+          <td class="yes">Minutes</td>
+          <td class="no">Hours to days, self-hosted</td>
+          <td class="no">Weeks — you build the whole pipeline</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Where Powerbase genuinely wins</h3>
+    <ul>
+      <li><strong>Compliance without a vendor.</strong> If your data cannot leave your
+      infrastructure — health, finance, government, or a client contract that says so — a
+      hosted SDK is off the table. Powerbase is the version you can actually ship.</li>
+      <li><strong>One file is a feature.</strong> Backup is copying a file. Restore is copying
+      it back. There is no cluster to keep alive, no version-skew between services, and nothing
+      to page anyone about at 3am.</li>
+      <li><strong>Redaction where it matters.</strong> PII is stripped on the device before it
+      is ever written to the local queue. A phone lost in a taxi does not contain your
+      customers' phone numbers.</li>
+      <li><strong>Retention that does not lose the plot.</strong> Raw rows are pruned at your
+      retention window, but every day was already folded into a rollup — so the twelve-month
+      chart still works when the twelve-month-old rows are gone. And pruning refuses to delete
+      a day it has not rolled up yet.</li>
+      <li><strong>Honest numbers.</strong> The read path tells you whether a chart came from the
+      rollups or the raw tables, so a surprising figure can always be traced to its source.</li>
+    </ul>
+
+    <h3>Where it does not</h3>
+    <ul>
+      <li><strong>Native symbolication.</strong> Crashlytics and Sentry do this properly. Powerbase
+      groups crashes by a normalised fingerprint, which is enough to see what is breaking and how
+      often — not enough to get you a symbolicated <code>libfoo.so</code> frame.</li>
+      <li><strong>Scale.</strong> SQLite over one file is excellent for a single product's
+      telemetry and will not replace a warehouse. If you are ingesting billions of events a day,
+      this is the wrong tool.</li>
+      <li><strong>Ecosystem.</strong> No integrations with your issue tracker, no session replay,
+      no release health. It is deliberately a small, sharp tool.</li>
+    </ul>
+
+    <div class="note">
+      <strong>The honest summary:</strong> if you can use a hosted service and want maximum
+      depth, use Crashlytics or Sentry. If you need the data to stay yours, want to run it on a
+      single box, and care about the app-shaped questions — who is crashing, which screen is
+      slow, is the SDK even still uploading — Powerbase is built for exactly that.
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Privacy</h2>
+    <ul>
+      <li>The app talks only to the server URL you configure. There is no other endpoint in the code.</li>
+      <li>It authenticates with a <strong>read-scoped</strong> key, which cannot write.</li>
+      <li>Diagnostics logs stay on the device until you tap share or export.</li>
+      <li>No analytics SDK, no third-party crash reporting, no ads, no tracking, no identifiers
+      beyond the install id the Powerbase SDK generates.</li>
+      <li>The only network call the app makes on its own is to GitHub's releases API, and only
+      when you tap <strong>Check for updates</strong>.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Technical details</h2>
+    <dl class="kv">
+      <dt>Package ID</dt><dd>com.powerbase.app</dd>
+      <dt>Version</dt><dd>1.0.0</dd>
+      <dt>Platform</dt><dd>Android 8.0+ (API 26)</dd>
+      <dt>Built with</dt><dd>Kotlin 2.0 · Jetpack Compose · Material 3</dd>
+      <dt>Licence</dt><dd>MIT</dd>
+      <dt>Repository</dt><dd><a href="https://github.com/merry8989-uk/powerbase-app">merry8989-uk/powerbase-app</a></dd>
+    </dl>
+    <h3>Building it yourself</h3>
+    <pre>./gradlew assembleDebug      # debug build
+./gradlew assembleRelease    # signed release</pre>
+    <p>Release signing reads <code>KEYSTORE_PATH</code>, <code>KEYSTORE_PASSWORD</code>,
+    <code>KEY_ALIAS</code> and <code>KEY_PASSWORD</code> from the environment, so no key material
+    is ever committed. Pushing a <code>v*</code> tag makes CI build the signed APK and AAB and
+    publish them as a release.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="sub" style="margin:0 auto 18px">
+      Want a feature, found a bug, or just want to say it is useful? Send a message — suggestions
+      shape what gets built next.
+    </p>
+    <a class="ig" href="https://instagram.com/osintgram_io">@osintgram_io</a>
+  </div>
+</footer>
+
+</body>
+</html>

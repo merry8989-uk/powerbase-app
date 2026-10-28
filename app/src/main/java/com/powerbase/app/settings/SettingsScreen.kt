@@ -295,6 +295,8 @@ fun SettingsScreen(
                 "Suggestions, feedback or a new feature request? Tap the handle above.",
                 style = MaterialTheme.typography.bodySmall,
             )
+
+            ExploreMoreAppsSection()
         }
     }
 }
